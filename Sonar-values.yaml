@@ -1,0 +1,6 @@
+ingress:
+  enabled: true
+  # Used to create an Ingress record.
+  hosts:
+    - name: sonarqube.devsecops.tolu  # Replace with your actual domain
+  ingressClassName: nginx
