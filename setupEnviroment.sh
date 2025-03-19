@@ -123,6 +123,7 @@ aws route53 change-resource-record-sets \
         }]
     }'
 
+# exit from local and cd back into the AWS console   
 
 ####################################################
 #set up git lab 
@@ -137,8 +138,10 @@ helm upgrade --install gitlab gitlab/gitlab \
 
 # grab the gitlab secret 
 k get secret gitlab-gitlab-initial-root-password -n gitlab -o yaml
-echo OTJMb2JlVDdVZXUzZHpiOGdvQkU4NWJaY0pVNk5SVVgxT3VvUk1qMEVOaGRhcnlkMzNaaE1mUlZIR1lnSGRlbw== | base64 -d
+echo -e "$(echo NFUxdzdFTmNoRERjc01tOUt0dW1IZDlWR2FQb2xHU0E5RGtGNjhzNnYxTmN0dzN3QlFiNVVHRHJURXpwMHVxRw== | base64 -d)\n"
 
+username: root
+password : 4U1w7ENchDDcsMm9KtumHd9VGaPolGSA9DkF68s6v1Nctw3wBQb5UGDrTEzp0uqG
 
 ####################LATEST SONARQUBE###############
 
