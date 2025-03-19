@@ -2,13 +2,26 @@
 cd /home/ubuntu/dev-environment
 ./scripts/run-with-container.sh
 
+#####
+#AWS credentials found at /home/ubuntu/.aws/credentials.
+#Are these credentials correct? (yes/no): yes
+#Select your container runtime:
+##1) docker
+#2) podman
+#3) nerdctl
+#? 1
+#Selected runtime: docker
+#Choose an action:
+#1) deploy
+#2) destroy
+#? 1
 
 
 #  grab public IP address
 aws ec2 describe-instances --filters "Name=tag:Name,Values=Bastion Host" --query "Reservations[].Instances[].PublicIpAddress" --output text
 
 # SSH into the bastion 
-ssh -i  ~/.ssh/dev-env.pem ubuntu@54.196.215.142
+ssh -i  ~/.ssh/dev-env.pem ubuntu@100.27.214.212
 ######################################################
 # clone from your rep the files you need , 
 git clone https://github.com/jondee/dev-environment.git
@@ -40,20 +53,56 @@ aws elbv2 describe-load-balancers --load-balancer-arns "arn:aws:elasticloadbalan
 aws elbv2 describe-load-balancers --query 'LoadBalancers[*].DNSName' --output text
 # k8s-ingress-ingressn-e58f8628fc-dda05663e8a2a3f0.elb.us-east-1.amazonaws.com
 
-#####################################################
-# configure Route53 Hosted Zones 
-aws route53 create-hosted-zone --name devsecops.tolu --caller-reference $(date +%s) --hosted-zone-config Comment="My Private Hosted Zone",PrivateZone=true --vpc VPCRegion=us-east-1,VPCId=vpc-034960cec9b0a35a8
+# check existing hosted zones and delete to avoid confusion 
 
 # use this to get the hosted-zone-id
 # get the ListHostedZones
 aws route53 list-hosted-zones --query 'HostedZones[*].[Id, Name]' --output table
 
-#----------------------------------------------------------
-#|                     ListHostedZones                    |
-#+------------------------------------+-------------------+
-#|  /hostedzone/Z04788931QSDPHLRIO2W9 |  devsecops.tolu.  |
-#|  /hostedzone/Z04577351ZDI2VI2O8QOY |  devsecops.tolu.  |
-#+------------------------------------+-------------------+
+----------------------------------------------------------
+|                     ListHostedZones                    |
++------------------------------------+-------------------+
+|  Z051552615M6X6LERTHKU |  devsecops.tolu.  |
+|  Z005737333U5V4B5JCOOV |  devsecops.tolu.  |
++------------------------------------+-------------------+
+
+#####################################################################################
+#!/bin/bash
+
+# List all hosted zones and get their IDs
+HOSTED_ZONES=$(aws route53 list-hosted-zones --query "HostedZones[*].Id" --output text)
+
+for ZONE_ID in $HOSTED_ZONES; do
+    echo "Processing Hosted Zone: $ZONE_ID"
+
+    # Get all record sets for this zone, excluding NS and SOA records
+    aws route53 list-resource-record-sets --hosted-zone-id "$ZONE_ID" \
+        --query "ResourceRecordSets[?!(Type == 'NS' || Type == 'SOA')]" \
+        > records.json
+
+    # Check if there are records to delete
+    if [[ $(jq '. | length' records.json) -gt 0 ]]; then
+        # Create a change batch file for deletion
+        jq '{Changes: [.[] | {Action: "DELETE", ResourceRecordSet: .}]}' records.json > change-batch.json
+
+        # Apply the change batch to delete records
+        aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" --change-batch file://change-batch.json
+    fi
+
+    # Delete the hosted zone
+    aws route53 delete-hosted-zone --id "$ZONE_ID"
+
+    echo "Deleted Hosted Zone: $ZONE_ID"
+done
+
+echo "All hosted zones processed."
+########################################################
+
+# configure New  Route53 Hosted Zones 
+aws route53 create-hosted-zone --name devsecops.tolu --caller-reference $(date +%s) --hosted-zone-config Comment="My Private Hosted Zone",PrivateZone=true --vpc VPCRegion=us-east-1,VPCId=vpc-034960cec9b0a35a8
+
+
+
 
 # configure record for Hosted zone , after pluggin in Zone-id , ingress Name 
 aws route53 change-resource-record-sets \
