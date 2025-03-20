@@ -27,8 +27,10 @@ ssh -i  ~/.ssh/dev-env.pem ubuntu@54.196.215.142
 git clone https://github.com/jondee/dev-environment.git
 
 # do kubecolor 
-chmod 777 kubecolor
+vim ~/.bashrc
+chmod 777 /home/ubuntu/dev-environment/kubecolor
 alias kubectl=/home/ubuntu/dev-environment/kubecolor
+source  ~/.bashrc
 
 # Configure VPN from Bastion to Local ENvironment 
 #copy the contents into a file on your desktop 
@@ -61,7 +63,7 @@ aws route53 list-hosted-zones --query 'HostedZones[*].[Id, Name]' --output table
 |  Z051552615M6X6LERTHKU |  devsecops.tolu.  |
 |  Z005737333U5V4B5JCOOV |  devsecops.tolu.  |
 +------------------------------------+-------------------+
-
+# THis will delete prior Hosted Zones###############################################
 #####################################################################################
 #!/bin/bash
 
@@ -161,10 +163,10 @@ helm upgrade --install -n sonarqube sonarqube sonarqube/sonarqube --set monitori
 
 ###############OLD SONARQUBE######################################################
 # Install sonarQube
-helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
-helm repo update
-kubectl create namespace sonarqube
-helm upgrade --install -n sonarqube  --version '~8' sonarqube sonarqube/sonarqube -f sonar-values.yaml
+#helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
+#helm repo update
+#kubectl create namespace sonarqube
+#helm upgrade --install -n sonarqube  --version '~8' sonarqube sonarqube/sonarqube -f sonar-values.yaml
 
 
 ###########################################
@@ -185,3 +187,6 @@ https://github.com/npandeya/snake-game.git
 #####################################################
 
 # Install Vault 
+helm repo add hashicorp https://helm.releases.hashicorp.com
+helm repo update
+helm install vault hashicorp/vault -f vault-values.yaml --create-namespace --namespace vault
