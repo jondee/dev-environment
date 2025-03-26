@@ -127,6 +127,7 @@ aws route53 change-resource-record-sets \
 
 # exit from local and cd back into the AWS console   
 
+################## GIT-LAB ##############################
 ####################################################
 #set up git lab 
 helm repo add gitlab https://charts.gitlab.io/
@@ -190,3 +191,7 @@ https://github.com/npandeya/snake-game.git
 helm repo add hashicorp https://helm.releases.hashicorp.com
 helm repo update
 helm install vault hashicorp/vault -f vault-values.yaml --create-namespace --namespace vault
+
+#####################################################
+# Install Observability ingress object for  ( Grafana, Prometheus, Tempo)
+kubectl apply -f observability-ingress.yaml
