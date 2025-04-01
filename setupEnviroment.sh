@@ -195,3 +195,14 @@ helm install vault hashicorp/vault -f vault-values.yaml --create-namespace --nam
 #####################################################
 # Install Observability ingress object for  ( Grafana, Prometheus, Tempo)
 kubectl apply -f observability-ingress.yaml
+
+
+#####################################################
+#Install Neuvector
+helm repo add neuvector https://neuvector.github.io/neuvector-helm/
+helm search repo neuvector/core
+helm install neuvector --namespace neuvector --create-namespace neuvector/core -f neuvector-values.yaml
+
+#Default Neuvector 
+username: admin 
+password: password
