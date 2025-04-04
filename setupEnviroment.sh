@@ -21,7 +21,7 @@ cd /home/ubuntu/dev-environment
 aws ec2 describe-instances --filters "Name=tag:Name,Values=Bastion Host" --query "Reservations[].Instances[].PublicIpAddress" --output text
 
 # SSH into the bastion 
-ssh -i  ~/.ssh/dev-env.pem ubuntu@54.196.215.142
+ssh -i  ~/.ssh/dev-env.pem ubuntu@98.81.81.238
 ######################################################
 # clone from your rep the files you need , 
 git clone https://github.com/jondee/dev-environment.git
@@ -41,15 +41,15 @@ cat client1.ovpn
 
 #Get LB-ARN 
 aws elbv2 describe-load-balancers --query 'LoadBalancers[*].LoadBalancerArn' --output text
-#arn:aws:elasticloadbalancing:us-east-1:605134440110:loadbalancer/net/k8s-ingress-ingressn-eeab87e991/e5162ceb806a9ea3
+#arn:aws:elasticloadbalancing:us-east-1:605134440110:loadbalancer/net/k8s-ingress-ingressn-d625bafb87/62be5e5c2dedf9e9
 
 #get Main VPC-ID
-aws elbv2 describe-load-balancers --load-balancer-arns "arn:aws:elasticloadbalancing:us-east-1:605134440110:loadbalancer/net/k8s-ingress-ingressn-eeab87e991/e5162ceb806a9ea3" --query "LoadBalancers[0].VpcId" --output text
-#vpc-09cade548d0fb39f2
+aws elbv2 describe-load-balancers --load-balancer-arns "arn:aws:elasticloadbalancing:us-east-1:605134440110:loadbalancer/net/k8s-ingress-ingressn-d625bafb87/62be5e5c2dedf9e9" --query "LoadBalancers[0].VpcId" --output text
+#vpc-0aaac808cd0fc88c1
 
 # get DNS Name 
 aws elbv2 describe-load-balancers --query 'LoadBalancers[*].DNSName' --output text
-# k8s-ingress-ingressn-eeab87e991-e5162ceb806a9ea3.elb.us-east-1.amazonaws.com
+# k8s-ingress-ingressn-d625bafb87-62be5e5c2dedf9e9.elb.us-east-1.amazonaws.com
 
 # check existing hosted zones and delete to avoid confusion 
 
@@ -97,20 +97,23 @@ echo "All hosted zones processed."
 ########################################################
 
 # configure New  Route53 Hosted Zones 
-aws route53 create-hosted-zone --name devsecops.tolu --caller-reference $(date +%s) --hosted-zone-config Comment="My Private Hosted Zone",PrivateZone=true --vpc VPCRegion=us-east-1,VPCId=vpc-09cade548d0fb39f2
+aws route53 create-hosted-zone --name devsecops.tolu --caller-reference $(date +%s) --hosted-zone-config Comment="My Private Hosted Zone",PrivateZone=true --vpc VPCRegion=us-east-1,VPCId=vpc-0aaac808cd0fc88c1
 
 # grab the hosted-zone id
 aws route53 list-hosted-zones --query 'HostedZones[*].[Id, Name]' --output table
 ----------------------------------------------------------
 |                     ListHostedZones                    |
 +------------------------------------+-------------------+
-|  Z01747041YI3BGFXLVWVJ |  devsecops.tolu.              |
+|  Z06933552LG68F0J0S406 |  devsecops.tolu.              |
 +------------------------------------+-------------------+
 
 
 # configure record for Hosted zone , after pluggin in Zone-id , ingress Name 
+#for below 
+# change hosted-zone-id: Z06933552LG68F0J0S406
+#change ingree value : k8s-ingress-ingressn-d625bafb87-62be5e5c2dedf9e9.elb.us-east-1.amazonaws.com
 aws route53 change-resource-record-sets \
-    --hosted-zone-id Z01747041YI3BGFXLVWVJ \
+    --hosted-zone-id Z06933552LG68F0J0S406 \
     --change-batch '{
         "Changes": [{
             "Action": "CREATE",
@@ -119,7 +122,7 @@ aws route53 change-resource-record-sets \
                 "Type": "CNAME",
                 "TTL": 300,
                 "ResourceRecords": [{
-                    "Value": "k8s-ingress-ingressn-eeab87e991-e5162ceb806a9ea3.elb.us-east-1.amazonaws.com"
+                    "Value": "k8s-ingress-ingressn-d625bafb87-62be5e5c2dedf9e9.elb.us-east-1.amazonaws.com"
                 }]
             }
         }]
@@ -205,4 +208,4 @@ helm install neuvector --namespace neuvector --create-namespace neuvector/core -
 
 #Default Neuvector 
 username: admin 
-password: password
+password: admin
